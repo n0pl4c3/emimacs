@@ -11,6 +11,12 @@
 ;; Enable Line Numbers
 (global-display-line-numbers-mode 1)
 
+(dolist (mode '(org-mode-hook
+		term-mode-hook
+		shell-mode-hook
+		eshell-mode-hook))
+  (add-hook mode (lambda () (display-line-numbers-mode 0))))
+
 ;; Set Font
 (set-face-attribute 'default nil :font "Fira Code NF" :height 140)
 
@@ -63,6 +69,7 @@
   (ivy-mode 1))
 
 ;; Icons for Doom Modeline
+;; First time usage: Install fonts
 (use-package all-the-icons
   :ensure t)
 
@@ -84,3 +91,31 @@
   (column-number-mode t)
   :init (doom-modeline-mode 1))
 
+;; Raindow Delimiters for LISP
+(use-package rainbow-delimiters
+  :hook (prog-mode . rainbow-delimiters-mode))
+
+;; For learning
+(use-package which-key
+  :init (which-key-mode)
+  :diminish which-key-mode
+  :config
+  (setq which-key-idle-delay 0.5))
+
+(use-package ivy-rich
+  :init
+  (ivy-rich-mode 1))
+
+(use-package helpful
+  :custom
+  (counsel-describe-function-function #'helpful-callable)
+  (counsel-describe-variable-function #'helpful-variable)
+  :bind
+  ([remap describe-function] . counsel-describe-function)
+  ([remap describe-command] . helpful-command)
+  ([remap describe-variable] . counsel-describe-variable)
+  ([remap describe-key] . helpful-key))
+
+;; Doom Themes for the time being
+;; TODO  Replace with selfmade one later
+(use-package doom-themes)
