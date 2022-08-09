@@ -18,7 +18,7 @@
   (add-hook mode (lambda () (display-line-numbers-mode 0))))
 
 ;; Set Font
-(set-face-attribute 'default nil :font "Fira Code NF" :height 140)
+(set-face-attribute 'default nil :font "FiraCode Nerd Font" :height 140)
 
 ;; Set Theme 
 (load-theme 'wombat)
