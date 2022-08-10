@@ -77,6 +77,7 @@
 (use-package counsel
   :bind (("M-x" . counsel-M-x)
 	 ("C-x b" . counsel-ibuffer)
+	 ("C-x C-b" . counsel-switch-buffer)
 	 ("C-x C-f" . counsel-find-file)
 	 :map minibuffer-local-map
 	 ("C-r" . 'counsel-minibuffer-history))
@@ -119,3 +120,28 @@
 ;; Doom Themes for the time being
 ;; TODO  Replace with selfmade one later
 (use-package doom-themes)
+
+;; For keybinding definitions
+(use-package general)
+(use-package hydra)
+
+;; Projectile
+(use-package projectile
+  :diminish projectile-mode
+  :config (projectile-mode)
+  :bind-keymap
+  ("C-c p" . projectile-command-map)
+  :init
+  (when (file-directory-p "~/Repositories")
+    (setq projectile-project-search-path '("~/Repositories")))
+  (setq projectile-switch-project-action #'projectile-dired))
+
+(use-package counsel-projectile
+  :config (counsel-projectile-mode))
+
+;; Magit
+(use-package magit
+  :commands
+  (magit-status magit-get-current-branch))
+
+(use-package forge)
