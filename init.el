@@ -20,9 +20,6 @@
 ;; Set Font
 (set-face-attribute 'default nil :font "FiraCode Nerd Font" :height 140)
 
-;; Set Theme 
-(load-theme 'wombat)
-
 ;; Package Sources
 (require 'package)
 (setq package-archives '(("melpa" . "https://melpa.org/packages/")
@@ -120,6 +117,9 @@
 ;; Doom Themes for the time being
 ;; TODO  Replace with selfmade one later
 (use-package doom-themes)
+
+;; Set Theme 
+(load-theme 'doom-fairy-floss)
 
 ;; For keybinding definitions
 (use-package general)
