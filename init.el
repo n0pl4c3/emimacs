@@ -25,14 +25,22 @@
 		eshell-mode-hook))
   (add-hook mode (lambda () (display-line-numbers-mode 0))))
 
-;; Set Font
-(set-face-attribute 'default nil :font emimacs/default-fixed-font :height emimacs/default-fixed-font-size)
+(defun emimacs/configure-font-faces ()
+ ;; Set Font
+ (set-face-attribute 'default nil :font emimacs/default-fixed-font :height emimacs/default-fixed-font-size)
 
-;; Set the fixed pitch face
-(set-face-attribute 'fixed-pitch nil :font emimacs/default-fixed-font  :height emimacs/default-fixed-font-size)
+ ;; Set the fixed pitch face
+ (set-face-attribute 'fixed-pitch nil :font emimacs/default-fixed-font  :height emimacs/default-fixed-font-size)
 
-;; Set the variable pitch face
-(set-face-attribute 'variable-pitch nil :font emimacs/default-variable-font :height emimacs/default-variable-font-size :weight 'regular)
+ ;; Set the variable pitch face
+ (set-face-attribute 'variable-pitch nil :font emimacs/default-variable-font :height emimacs/default-variable-font-size :weight 'regular))
+
+(if (daemonp)
+    (add-hook 'after-make-frame-functions
+	      (lambda (frame)
+		(with-selected-frame frame
+		  (emimacs/configure-font-faces))))
+  (emimacs/configure-font-faces))
 
 ;; Package Sources
 (require 'package)
@@ -204,7 +212,7 @@
  :after org
  :hook (org-mode . org-bullets-mode)
  :custom
- (org-bullets-bullet-list '("○" "●" "🞛")))
+ (org-bullets-bullet-list '("○" "●" "⋄")))
 
 (defun emimacs/org-mode-visual-fill ()
   (setq visual-fill-column-width 100
