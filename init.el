@@ -1,3 +1,11 @@
+;; Variables
+;; Fonts
+(defvar emimacs/default-fixed-font-size 150)
+(defvar emimacs/default-variable-font-size 165)
+(defvar emimacs/default-fixed-font "FiraCode Nerd Font")
+(defvar emimacs/default-variable-font "ETBembo")
+
+;;
 ;; Disable Startup Message
 (setq inhibit-startup-message t)
 
@@ -18,7 +26,13 @@
   (add-hook mode (lambda () (display-line-numbers-mode 0))))
 
 ;; Set Font
-(set-face-attribute 'default nil :font "FiraCode Nerd Font" :height 150)
+(set-face-attribute 'default nil :font emimacs/default-fixed-font :height emimacs/default-fixed-font-size)
+
+;; Set the fixed pitch face
+(set-face-attribute 'fixed-pitch nil :font emimacs/default-fixed-font  :height emimacs/default-fixed-font-size)
+
+;; Set the variable pitch face
+(set-face-attribute 'variable-pitch nil :font emimacs/default-variable-font :height emimacs/default-variable-font-size :weight 'regular)
 
 ;; Package Sources
 (require 'package)
@@ -148,6 +162,34 @@
 (use-package forge)
 
 ;; Orgmode
+
+(font-lock-add-keywords 'org-mode
+                        '(("^ *\\([-]\\) "
+  (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+
+(with-eval-after-load 'org-faces
+(dolist (face '((org-level-1 . 1.5)
+                (org-level-2 . 1.25)
+                (org-level-3 . 1.15)
+                (org-level-4 . 1.10)
+                (org-level-5 . 1.05)
+                (org-level-6 . 1.05)
+                (org-level-7 . 1.05)
+                (org-level-8 . 1.05)))
+    (set-face-attribute (car face) nil :font emimacs/default-variable-font :weight 'regular :height (cdr face)))
+
+(set-face-attribute 'org-block nil    :foreground nil :inherit 'fixed-pitch)
+(set-face-attribute 'org-table nil    :inherit 'fixed-pitch)
+(set-face-attribute 'org-formula nil  :inherit 'fixed-pitch)
+(set-face-attribute 'org-code nil     :inherit '(shadow fixed-pitch))
+(set-face-attribute 'org-table nil    :inherit '(shadow fixed-pitch))
+(set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
+(set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
+(set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
+(set-face-attribute 'org-checkbox nil  :inherit 'fixed-pitch)
+(set-face-attribute 'line-number nil :inherit 'fixed-pitch)
+(set-face-attribute 'line-number-current-line nil :inherit 'fixed-pitch))
+
 (defun emimacs/org-mode-setup ()
   (org-indent-mode 1)
   (variable-pitch-mode 1)
@@ -162,9 +204,7 @@
  :after org
  :hook (org-mode . org-bullets-mode)
  :custom
- (org-bullets-bullet-list '("🞛" "●" "○")))
-
-;; TODO Variale Orgmode pitch https://zzamboni.org/post/beautifying-org-mode-in-emacs/
+ (org-bullets-bullet-list '("○" "●" "🞛")))
 
 (defun emimacs/org-mode-visual-fill ()
   (setq visual-fill-column-width 100
