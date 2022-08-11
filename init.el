@@ -18,7 +18,7 @@
   (add-hook mode (lambda () (display-line-numbers-mode 0))))
 
 ;; Set Font
-(set-face-attribute 'default nil :font "FiraCode Nerd Font" :height 140)
+(set-face-attribute 'default nil :font "FiraCode Nerd Font" :height 150)
 
 ;; Package Sources
 (require 'package)
@@ -85,7 +85,7 @@
 (use-package doom-modeline
   :ensure t
   :custom
-  (doom-modeline-height 30)
+  (doom-modeline-height 35)
   (column-number-mode t)
   :init (doom-modeline-mode 1))
 
@@ -144,4 +144,33 @@
   :commands
   (magit-status magit-get-current-branch))
 
+;; TODO initial setup
 (use-package forge)
+
+;; Orgmode
+(defun emimacs/org-mode-setup ()
+  (org-indent-mode 1)
+  (variable-pitch-mode 1)
+  (visual-line-mode 1))
+
+(use-package org
+  :hook (org-mode . emimacs/org-mode-setup)
+  :config
+  (setq org-ellipsis " "))
+
+(use-package org-bullets
+ :after org
+ :hook (org-mode . org-bullets-mode)
+ :custom
+ (org-bullets-bullet-list '("🞛" "●" "○")))
+
+;; TODO Variale Orgmode pitch https://zzamboni.org/post/beautifying-org-mode-in-emacs/
+
+(defun emimacs/org-mode-visual-fill ()
+  (setq visual-fill-column-width 100
+	visual-fill-column-center-text t)
+  (visual-fill-column-mode 1))
+
+(use-package visual-fill-column
+  :hook (org-mode . emimacs/org-mode-visual-fill))
+
