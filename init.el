@@ -176,27 +176,27 @@
   (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
 
 (with-eval-after-load 'org-faces
-(dolist (face '((org-level-1 . 1.5)
-                (org-level-2 . 1.25)
-                (org-level-3 . 1.15)
-                (org-level-4 . 1.10)
-                (org-level-5 . 1.05)
-                (org-level-6 . 1.05)
-                (org-level-7 . 1.05)
-                (org-level-8 . 1.05)))
+  (dolist (face '((org-level-1 . 1.5)
+                  (org-level-2 . 1.25)
+                  (org-level-3 . 1.15)
+                  (org-level-4 . 1.10)
+                  (org-level-5 . 1.05)
+                  (org-level-6 . 1.05)
+                  (org-level-7 . 1.05)
+                  (org-level-8 . 1.05)))
     (set-face-attribute (car face) nil :font emimacs/default-variable-font :weight 'regular :height (cdr face)))
 
-(set-face-attribute 'org-block nil    :foreground nil :inherit 'fixed-pitch)
-(set-face-attribute 'org-table nil    :inherit 'fixed-pitch)
-(set-face-attribute 'org-formula nil  :inherit 'fixed-pitch)
-(set-face-attribute 'org-code nil     :inherit '(shadow fixed-pitch))
-(set-face-attribute 'org-table nil    :inherit '(shadow fixed-pitch))
-(set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
-(set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
-(set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
-(set-face-attribute 'org-checkbox nil  :inherit 'fixed-pitch)
-(set-face-attribute 'line-number nil :inherit 'fixed-pitch)
-(set-face-attribute 'line-number-current-line nil :inherit 'fixed-pitch))
+  (set-face-attribute 'org-block nil    :foreground nil :inherit 'fixed-pitch)
+  (set-face-attribute 'org-table nil    :inherit 'fixed-pitch)
+  (set-face-attribute 'org-formula nil  :inherit 'fixed-pitch)
+  (set-face-attribute 'org-code nil     :inherit '(shadow fixed-pitch))
+  (set-face-attribute 'org-table nil    :inherit '(shadow fixed-pitch))
+  (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
+  (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
+  (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
+  (set-face-attribute 'org-checkbox nil  :inherit 'fixed-pitch)
+  (set-face-attribute 'line-number nil :inherit 'fixed-pitch)
+  (set-face-attribute 'line-number-current-line nil :inherit 'fixed-pitch))
 
 (defun emimacs/org-mode-setup ()
   (org-indent-mode 1)
@@ -206,13 +206,17 @@
 (use-package org
   :hook (org-mode . emimacs/org-mode-setup)
   :config
-  (setq org-ellipsis " "))
+  (setq org-ellipsis " ")
+  (setq org-agenda-start-with-log-mode t)
+  (setq org-log-done 'time)
+  (setq org-log-into-drawer t)
+  (setq org-agenda-files '("~/Orgfiles")))
 
 (use-package org-bullets
  :after org
  :hook (org-mode . org-bullets-mode)
  :custom
- (org-bullets-bullet-list '("○" "●" "⋄")))
+ (org-bullets-bullet-list '("◉" "●" "⋄")))
 
 (defun emimacs/org-mode-visual-fill ()
   (setq visual-fill-column-width 100
