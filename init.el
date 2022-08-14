@@ -175,7 +175,7 @@
                         '(("^ *\\([-]\\) "
   (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
 
-(with-eval-after-load 'org-faces
+(defun emimacs/org-font-config ()
   (dolist (face '((org-level-1 . 1.5)
                   (org-level-2 . 1.25)
                   (org-level-3 . 1.15)
@@ -206,11 +206,17 @@
 (use-package org
   :hook (org-mode . emimacs/org-mode-setup)
   :config
-  (setq org-ellipsis " ")
+  (emimacs/org-font-config)
   (setq org-agenda-start-with-log-mode t)
-  (setq org-log-done 'time)
-  (setq org-log-into-drawer t)
-  (setq org-agenda-files '("~/Orgfiles")))
+  (require 'org-habit)
+  
+  :custom
+  (org-ellipsis " ")
+  (org-log-done 'time)
+  (org-log-into-drawer t)
+  (org-agenda-files '("~/Orgfiles"))
+  (org-todo-keywords
+    '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d!)")))) 
 
 (use-package org-bullets
  :after org
