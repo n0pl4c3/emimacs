@@ -214,7 +214,7 @@
   (org-ellipsis " ")
   (org-log-done 'time)
   (org-log-into-drawer t)
-  (org-agenda-files '("~/Orgfiles"))
+  (org-agenda-files '("~/Orgfiles" "~/Orgfiles/Projects"))
   (org-todo-keywords
     '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d!)")))) 
 
@@ -232,3 +232,26 @@
 (use-package visual-fill-column
   :hook (org-mode . emimacs/org-mode-visual-fill))
 
+;; org-babel
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((emacs-lisp . t)
+   (python . t)))
+
+(setq org-confirm-babel-evaluate nil)
+
+;; Structure Templates
+(require 'org-tempo)
+
+(add-to-list 'org-structure-template-alist '("sh" . "src shell"))
+(add-to-list 'org-structure-template-alist '("py" . "src python"))
+(add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
+
+;; Auto-Tangle Config File
+(defun emimacs/org-babel-auto-tangle ()
+  (when (string-equal (buffer-file-name)
+		      (expand-file-name "~/Repositories/emimacs/emimacs.org"))
+    (let ((org-confirm-babel-evaluate nil))
+      (org-babel-tangle))))
+  
+(add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'emimacs/org-babel-auto-tangle)))
