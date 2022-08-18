@@ -263,7 +263,7 @@
 
 ;; Parinfer
 (use-package parinfer-rust-mode
-  :hook emacs-lisp-mode
+  :hook (emacs-lisp-mode scheme-mode)
   :init
   (setq parinfer-rust-auto-download t))
     
