@@ -20,9 +20,9 @@
 (global-display-line-numbers-mode 1)
 
 (dolist (mode '(org-mode-hook
-		term-mode-hook
-		shell-mode-hook
-		eshell-mode-hook))
+                term-mode-hook
+                shell-mode-hook
+                eshell-mode-hook))
   (add-hook mode (lambda () (display-line-numbers-mode 0))))
 
 (defun emimacs/configure-font-faces ()
@@ -37,16 +37,16 @@
 
 (if (daemonp)
     (add-hook 'after-make-frame-functions
-	      (lambda (frame)
-		(with-selected-frame frame
-		  (emimacs/configure-font-faces))))
+              (lambda (frame)
+                (with-selected-frame frame
+                  (emimacs/configure-font-faces))))
   (emimacs/configure-font-faces))
 
 ;; Package Sources
 (require 'package)
 (setq package-archives '(("melpa" . "https://melpa.org/packages/")
-			 ("org" . "https://orgmode.org/elpa/")
-			 ("elpa" . "https://elpa.gnu.org/packages/")))
+                         ("org" . "https://orgmode.org/elpa/")
+                         ("elpa" . "https://elpa.gnu.org/packages/")))
 
 (package-initialize)
 (unless package-archive-contents
@@ -72,18 +72,18 @@
 (use-package ivy
   :diminish
   :bind (("C-s" . swiper)
-	 :map ivy-minibuffer-map
-	 ("TAB" . ivy-alt-done)
-	 ("C-l" . ivy-alt-done)
-	 ("C-j" . ivy-next-line)
-	 ("C-k" . ivy-previous-line)
-	 :map ivy-switch-buffer-map
-	 ("C-k" . ivy-previous-line)
-	 ("C-l" . ivy-done)
-	 ("C-d" . ivy-switch-buffer-kill)
-	 :map ivy-reverse-i-search-map
-	 ("C-k" . ivy-previous-line)
-	 ("C-d" . ivy-reverse-i-search-kill))
+         :map ivy-minibuffer-map
+         ("TAB" . ivy-alt-done)
+         ("C-l" . ivy-alt-done)
+         ("C-j" . ivy-next-line)
+         ("C-k" . ivy-previous-line)
+         :map ivy-switch-buffer-map
+         ("C-k" . ivy-previous-line)
+         ("C-l" . ivy-done)
+         ("C-d" . ivy-switch-buffer-kill)
+         :map ivy-reverse-i-search-map
+         ("C-k" . ivy-previous-line)
+         ("C-d" . ivy-reverse-i-search-kill))
   :init
   (ivy-mode 1))
 
@@ -95,11 +95,11 @@
 ;; Counsel (Ivy for builtin commands)
 (use-package counsel
   :bind (("M-x" . counsel-M-x)
-	 ("C-x b" . counsel-ibuffer)
-	 ("C-x C-b" . counsel-switch-buffer)
-	 ("C-x C-f" . counsel-find-file)
-	 :map minibuffer-local-map
-	 ("C-r" . 'counsel-minibuffer-history))
+         ("C-x b" . counsel-ibuffer)
+         ("C-x C-b" . counsel-switch-buffer)
+         ("C-x C-f" . counsel-find-file)
+         :map minibuffer-local-map
+         ("C-r" . 'counsel-minibuffer-history))
   :config
   (setq ivy-initial-inputs-alist nil))
 
@@ -173,7 +173,7 @@
 
 (font-lock-add-keywords 'org-mode
                         '(("^ *\\([-]\\) "
-  (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+                           (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
 
 (defun emimacs/org-font-config ()
   (dolist (face '((org-level-1 . 1.5)
@@ -214,7 +214,7 @@
   (org-ellipsis " ")
   (org-log-done 'time)
   (org-log-into-drawer t)
-  (org-agenda-files '("~/Orgfiles" "~/Orgfiles/Projects"))
+  (org-agenda-files '("~/Orgfiles" "~/Orgfiles/Projects" "~/Orgfiles/Literature"))
   (org-todo-keywords
     '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d!)")))) 
 
@@ -226,17 +226,21 @@
 
 (defun emimacs/org-mode-visual-fill ()
   (setq visual-fill-column-width 100
-	visual-fill-column-center-text t)
+        visual-fill-column-center-text t)
   (visual-fill-column-mode 1))
 
 (use-package visual-fill-column
   :hook (org-mode . emimacs/org-mode-visual-fill))
 
+;; Scheme
+(use-package geiser-guile :ensure t)
+
 ;; org-babel
 (org-babel-do-load-languages
  'org-babel-load-languages
  '((emacs-lisp . t)
-   (python . t)))
+   (python . t)
+   (scheme . t)))
 
 (setq org-confirm-babel-evaluate nil)
 
@@ -246,12 +250,20 @@
 (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
 (add-to-list 'org-structure-template-alist '("py" . "src python"))
 (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
+(add-to-list 'org-structure-template-alist '("sc" . "src scheme"))
 
 ;; Auto-Tangle Config File
 (defun emimacs/org-babel-auto-tangle ()
   (when (string-equal (buffer-file-name)
-		      (expand-file-name "~/Repositories/emimacs/emimacs.org"))
+                      (expand-file-name "~/Repositories/emimacs/emimacs.org"))
     (let ((org-confirm-babel-evaluate nil))
       (org-babel-tangle))))
   
 (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'emimacs/org-babel-auto-tangle)))
+
+;; Parinfer
+(use-package parinfer-rust-mode
+  :hook emacs-lisp-mode
+  :init
+  (setq parinfer-rust-auto-download t))
+    
