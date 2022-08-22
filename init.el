@@ -269,3 +269,6 @@
     
 ;; Org Latex Preview Scale
 (setq org-format-latex-options (plist-put org-format-latex-options :scale 2.0))
+
+;; Fixing Org mode indentations
+(set-face-attribute 'org-hide nil :inherit 'fixed-pitch)
