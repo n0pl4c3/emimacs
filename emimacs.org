@@ -1,0 +1,601 @@
+#+title: Main Emimacs Configuration File
+#+PROPERTY: header-args:emacs-lisp :tangle ./init_test.el :mkdirp yes
+
+* Emimacs
+** What is this?
+This is n0pl4c3's personal configuration for GNU Emacs, with the theming of this config eventually being aimed at being heavily inspired by the character Emilia from the web novel series Re: Zero, at the moment it is just a rather plain configuration used for scientific writing, personal organization as well as programming. I'm very new to Emacs as a whole, so any form of criticism and suggestions are very much appreciated.
+
+A lot of the config at it's current state is heavily inspired by [[https://github.com/daviwil/emacs-from-scratch][Emacs from Scratch]].
+
+** General Variables
+
+The default font, and especially font sizes, Emacs ships with are about as legible as many lecturer's slides on my system. Therefore changing them to fonts I like is a no-brainer, using ETBembo for variable sized text such as orgfiles, FiraCode NF for my monospaced needs. The font sizes might seem disproportionate, but I presume the need for such high numbers stems the font rendering used by Emacs (harfbuzz I assume?).
+
+#+begin_src emacs-lisp
+;; Fonts
+(defvar emimacs/default-fixed-font-size 150)
+(defvar emimacs/default-variable-font-size 165)
+(defvar emimacs/default-fixed-font "FiraCode Nerd Font")
+(defvar emimacs/default-variable-font "ETBembo")
+#+end_src
+
+** General Settings
+*** Disabling unnecessary UI elements.
+Some of the default features enabled in Emacs can definitely help new learners on their jouney. Personally, migrating from Vim, I am too much of a fan of minimalist UIs not to immediately disable them though. This turns of the startup message, scroll bar, menu bar etc.
+
+#+begin_src emacs-lisp
+;; Disable Startup Message
+(setq inhibit-startup-message t)
+
+;; Disable unneeded UI elements
+(scroll-bar-mode -1)
+(tool-bar-mode -1)
+(tooltip-mode -1)
+(set-fringe-mode 10)
+(menu-bar-mode -1)
+#+end_src
+
+*** Line Numbers
+I also enable line number mode globally, cause for all my coding needs I definitely wish to have those for obvious reasons. I do add a hook for the sake of disabling them in certain modes which would not profit from them though.
+
+#+begin_src emacs-lisp
+
+;; Enable Line Numbers
+(global-display-line-numbers-mode 1)
+
+ (dolist (mode '(org-mode-hook
+                   term-mode-hook
+                   shell-mode-hook
+                   eshell-mode-hook))
+     (add-hook mode (lambda () (display-line-numbers-mode 0))))
+#+end_src
+
+*** Fonts
+
+To bring the variables introduced earlier to good use, I here set the font-faces for emacs to use, both for the monospaced and variable one.
+
+#+begin_src emacs-lisp
+(defun emimacs/configure-font-faces ()
+ ;; Set Font
+ (set-face-attribute 'default nil :font emimacs/default-fixed-font :height emimacs/default-fixed-font-size)
+
+ ;; Set the fixed pitch face
+ (set-face-attribute 'fixed-pitch nil :font emimacs/default-fixed-font  :height emimacs/default-fixed-font-size)
+
+ ;; Set the variable pitch face
+ (set-face-attribute 'variable-pitch nil :font emimacs/default-variable-font :height emimacs/default-variable-font-size :weight 'regular))
+
+#+end_src
+
+**** Fonts in Daemon Mode
+
+When running Emacs as a server, fonts will mess up/not be loaded. Adding a simple hook running in daemon mode can alleviate this issue.
+
+#+begin_src emacs-lisp
+(if (daemonp)
+    (add-hook 'after-make-frame-functions
+              (lambda (frame)
+                (with-selected-frame frame
+                  (emimacs/configure-font-faces))))
+  (emimacs/configure-font-faces))
+#+end_src
+
+*** Custom File
+By default, emacs will create customize blocks for packages installed. These can be used, but given that all customization is done through use-package anyways, this would only clutter the config file. Therefore we chose a different file to write these blocks to.
+
+#+begin_src emacs-lisp
+;; make customize use it's own file
+(setq custom-file "~/.emacs.d/custom.el")
+(load custom-file)
+#+end_src
+
+** Package Management
+*** Sources
+Most packages used either come from the official repositories or Melpa, with org-mode specifics being pulled from their repos.
+
+#+begin_src emacs-lisp
+  ;; Package Sources
+  (require 'package)
+  (setq package-archives '(("melpa" . "https://melpa.org/packages/")
+                           ("org" . "https://orgmode.org/elpa/")
+                           ("elpa" . "https://elpa.gnu.org/packages/")))
+
+(package-initialize)
+(unless package-archive-contents
+  (package-refresh-contents))
+#+end_src
+
+*** Management
+For package management, I personally use use-package, but will play with and evaluate different solutions in the future.
+
+#+begin_src emacs-lisp
+(require 'use-package)
+(setq use-package-always-ensure t)
+#+end_src
+
+
+** Packages
+*** Diminish
+The default modeline contains a whole lot of information, some of it more, some of it less relevant. Using the diminish package allows to alleviate some of that clutter.
+
+#+begin_src emacs-lisp
+;; To keep the modeline cleaner
+(unless (package-installed-p 'diminish)
+  (package-install 'diminish))
+
+(require 'diminish)
+#+end_src
+
+*** Ivy
+Completions for emacs commands are very useful, and Ivy not only adds significant improvement for those, but also lots of other possibilities, such as the swiper used for easily finding text within files. A lot of it's commands have been mapped to keys for simple usage. Vim-style bindings for movements have been copied from emacs from scratch as of yet, albeit I am heavily reconsidering how much sense this makes as I prefer fully committing to emacs movement keys.
+
+#+begin_src emacs-lisp
+;; Ivy (completions)
+(use-package ivy
+  :diminish
+  :bind (("C-s" . swiper)
+         :map ivy-minibuffer-map
+         ("TAB" . ivy-alt-done)
+         ("C-l" . ivy-alt-done)
+         ("C-j" . ivy-next-line)
+         ("C-k" . ivy-previous-line)
+         :map ivy-switch-buffer-map
+         ("C-k" . ivy-previous-line)
+         ("C-l" . ivy-done)
+         ("C-d" . ivy-switch-buffer-kill)
+         :map ivy-reverse-i-search-map
+         ("C-k" . ivy-previous-line)
+         ("C-d" . ivy-reverse-i-search-kill))
+  :init
+  (ivy-mode 1))
+#+end_src
+
+*** Counsel
+
+Counsel feels like Ivy but with added steroids for styling and configuring completions for emacs builtin functions and the likes.
+
+#+begin_src emacs-lisp
+(use-package counsel
+  :bind (("M-x" . counsel-M-x)
+         ("C-x b" . counsel-ibuffer)
+         ("C-x C-b" . counsel-switch-buffer)
+         ("C-x C-f" . counsel-find-file)
+         :map minibuffer-local-map
+         ("C-r" . 'counsel-minibuffer-history))
+  :config
+  (setq ivy-initial-inputs-alist nil))
+
+#+end_src
+
+*** ivy-rich
+
+This package makes working with Ivy and Counsel even more pleasant, and as a beginner I am very happy about it existing.
+
+#+begin_src emacs-lisp
+(use-package ivy-rich
+  :init
+  (ivy-rich-mode 1))
+#+end_src
+*** Doom Modeline
+Doom modeline definitely looks significantly more modern than what emacs ships with. But first we will need icons to have beautiful glyphs showing the major mode used.
+
+On first time using this config, it is necessary to run =all-the-icons-install-fonts=.
+
+#+begin_src emacs-lisp
+;; Icons for Doom Modeline
+;; First time usage: Install fonts
+(use-package all-the-icons
+  :ensure t)
+#+end_src
+
+After that, we install doom-modeline and configure it to our needs.
+
+#+begin_src emacs-lisp
+(use-package doom-modeline
+  :ensure t
+  :custom
+  (doom-modeline-height 35)
+  (column-number-mode t)
+  :init (doom-modeline-mode 1))
+#+end_src
+
+*** rainbow-delimeters
+
+As a newbie to LISP programming, working with LISP, be it ELISP or Guile, can feel quite daunting at times due to it's heavy reliance on parenthesis. To make working with this easier for me, being able to easily match parens by color-coding them is a life-saver.
+
+#+begin_src emacs-lisp
+(use-package rainbow-delimiters
+  :hook (prog-mode . rainbow-delimiters-mode))
+#+end_src
+
+
+*** which-key
+
+As impresssive as the sheer amount of functionality and keybinds offered by emacs might be, it certainly can be rather daunting at times as a newbie. Which key helps me remember chords, and even learn new features at random from time to time.
+
+#+begin_src emacs-lisp
+(use-package which-key
+  :init (which-key-mode)
+  :diminish which-key-mode
+  :config
+  (setq which-key-idle-delay 0.5))
+#+end_src
+
+*** helpful
+
+The self-documenting nature of emacs is already a charm, but to me as a new learner some added information ot it makes things even better, which the =helpful= package kindly provides.
+
+#+begin_src emacs-lisp
+(use-package helpful
+  :custom
+  (counsel-describe-function-function #'helpful-callable)
+  (counsel-describe-variable-function #'helpful-variable)
+  :bind
+  ([remap describe-function] . counsel-describe-function)
+  ([remap describe-command] . helpful-command)
+  ([remap describe-variable] . counsel-describe-variable)
+  ([remap describe-key] . helpful-key))
+#+end_src
+
+*** doom-themes
+
+The long term goal certainly is to make this config build on a custom made Emilia-theme. But for the time being, doom-themes provides a range of themes fairly nice to work with. The fairy-floss theme has it's flaws, but it heavily reminds me of Emilia, which would be an odd way to set priorities to some, but not to me.
+
+#+begin_src emacs-lisp
+(use-package doom-themes)
+
+;; Set Theme 
+(load-theme 'doom-fairy-floss)
+#+end_src
+
+*** General
+
+The default way of defining new keybinds can be tedious at times, using general would allow for a more comfortable way for this.
+
+#+begin_src emacs-lisp
+(use-package general)
+#+end_src
+
+*** Hydra
+
+Hydra enables easily defining repeatable keybinds.
+
+#+begin_src emacs-lisp
+(use-package hydra)
+#+end_src
+
+*** Projectile
+
+I already quite enjoy emacs' approach to file management and switching between them, but projectile adds some additional tools to efficiently work with (programming) projects.
+
+#+begin_src emacs-lisp
+;; Projectile
+(use-package projectile
+  :diminish projectile-mode
+  :config (projectile-mode)
+  :bind-keymap
+  ("C-c p" . projectile-command-map)
+  :init
+  (when (file-directory-p "~/Repositories")
+    (setq projectile-project-search-path '("~/Repositories")))
+  (setq projectile-switch-project-action #'projectile-dired))
+
+(use-package counsel-projectile
+  :config (counsel-projectile-mode))
+#+end_src
+
+*** Magit
+
+If there is one package that I can say fully sold me to using emacs, it clearly has to be Magit. Definitely the most pleasant git interface I have seen so far.
+
+#+begin_src emacs-lisp
+;; Magit
+(use-package magit
+  :commands
+  (magit-status magit-get-current-branch))
+#+end_src
+
+**** TODO Forge
+
+As if the outstanding support for git wasn't enough, extending Magit with the forge package even allows for working with Issues and PRs directly from within Emacs. 
+
+#+begin_src emacs-lisp
+  ;; TODO initial setup
+  (use-package forge)
+#+end_src
+
+* Org-Mode
+Org-Mode is probably one of the most common reasons for using emacs. It's capabilities for a plethora of different things make it an astounding piece of software, and as I am sure you might have noticed, this entire config file was written using org-mode as well.
+
+Some setup regarding font-siyes, what fonts to use when etc. is needed and produces some fairly ugly functions, but it is clearly worth it.
+
+#+begin_src emacs-lisp
+(font-lock-add-keywords 'org-mode
+                        '(("^ *\\([-]\\) "
+                           (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+
+(defun emimacs/org-font-config ()
+  (dolist (face '((org-level-1 . 1.5)
+                  (org-level-2 . 1.25)
+                  (org-level-3 . 1.15)
+                  (org-level-4 . 1.10)
+                  (org-level-5 . 1.05)
+                  (org-level-6 . 1.05)
+                  (org-level-7 . 1.05)
+                  (org-level-8 . 1.05)))
+    (set-face-attribute (car face) nil :font emimacs/default-variable-font :weight 'regular :height (cdr face)))
+
+  (set-face-attribute 'org-block nil    :foreground nil :inherit 'fixed-pitch)
+  (set-face-attribute 'org-table nil    :inherit 'fixed-pitch)
+  (set-face-attribute 'org-formula nil  :inherit 'fixed-pitch)
+  (set-face-attribute 'org-code nil     :inherit '(shadow fixed-pitch))
+  (set-face-attribute 'org-table nil    :inherit '(shadow fixed-pitch))
+  (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
+  (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
+  (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
+  (set-face-attribute 'org-checkbox nil  :inherit 'fixed-pitch)
+  (set-face-attribute 'line-number nil :inherit 'fixed-pitch)
+  (set-face-attribute 'line-number-current-line nil :inherit 'fixed-pitch))
+#+end_src
+
+We also need to enable certain minor modes so org-mode does not rely on monospaced fonts, and to make it's auto-indentation do what it should.
+
+#+begin_src emacs-lisp
+(defun emimacs/org-mode-setup ()
+  (org-indent-mode 1)
+  (variable-pitch-mode 1)
+  (visual-line-mode 1))
+#+end_src
+
+Now we can use the package itself. Note that adding folders for the agenda manually most likely is not the most straightforward way here, I will look over this in the future.
+
+#+begin_src emacs-lisp
+(use-package org
+  :hook (org-mode . emimacs/org-mode-setup)
+  :config
+  (emimacs/org-font-config)
+  (setq org-agenda-start-with-log-mode t)
+  (require 'org-habit)
+  
+  :custom
+  (org-ellipsis " ")
+  (org-log-done 'time)
+  (org-log-into-drawer t)
+  (org-agenda-files '("~/Orgfiles" "~/Orgfiles/Projects" "~/Orgfiles/Literature" "~/Orgfiles/University"))
+  (org-todo-keywords
+    '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d!)")))) 
+#+end_src
+
+*** org-bullets
+
+The normal bullet-points by org-mode start looking a bit weird at deeper nesting. The org-bullets package helps there.
+
+#+begin_src emacs-lisp
+(use-package org-bullets
+ :after org
+ :hook (org-mode . org-bullets-mode)
+ :custom
+ (org-bullets-bullet-list '("◉" "●" "⋄")))
+#+end_src
+
+** Visual Fill
+
+To make editing orgfiles more akin to a text processor, visual fill adds padding to the text on the sides.
+
+#+begin_src emacs-lisp
+(defun emimacs/org-mode-visual-fill ()
+  (setq visual-fill-column-width 100
+        visual-fill-column-center-text t)
+  (visual-fill-column-mode 1))
+
+(use-package visual-fill-column
+  :hook (org-mode . emimacs/org-mode-visual-fill))
+#+end_src
+
+On my system, some issues with text indentation occur, probably due to the font used. This is easily fixed.
+
+#+begin_src emacs-lisp
+;; Fixing Org mode indentations
+(set-face-attribute 'org-hide nil :inherit 'fixed-pitch)
+#+end_src
+
+** Babel
+Babel is an incredibly powerful package, allowing for code blocks to be evaluated and tangled from within org files, thus also powering this very configuration file.
+
+#+begin_src emacs-lisp
+;; org-babel
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((emacs-lisp . t)
+   (python . t)
+   (scheme . t)))
+
+(setq org-confirm-babel-evaluate nil)
+#+end_src
+
+** Tempo
+Always typing out the syntax of code blocks by hand is fairly tiresome, tempo alleviating this by allowing for quick macros which extend to the wanted code block.
+
+#+begin_src emacs-lisp
+;; Structure Templates
+(require 'org-tempo)
+
+(add-to-list 'org-structure-template-alist '("sh" . "src shell"))
+(add-to-list 'org-structure-template-alist '("py" . "src python"))
+(add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
+(add-to-list 'org-structure-template-alist '("sc" . "src scheme"))
+#+end_src
+
+We also set up this very file here to automatically be tangled, to make it easily usable as emacs core configuration file.
+
+#+begin_src emacs-lisp
+  ;; Auto-Tangle Config File
+  (defun emimacs/org-babel-auto-tangle ()
+    (when (string-equal (buffer-file-name)
+                        (expand-file-name "~/Repositories/emimacs/emimacs.org"))
+      (let ((org-confirm-babel-evaluate nil))
+        (org-babel-tangle))))
+
+  (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'emimacs/org-babel-auto-tangle)))
+#+end_src
+
+* Language Specific
+Here configurations for working with different programming languages is placed
+
+Generally, we will want to have the lsp package, as while most things made by Microsoft suck bad, this protocol makes auto-completion quite a charm in many editors including emacs.
+
+#+begin_src emacs-lisp
+;; LSP
+(use-package lsp-mode
+  :ensure
+  :commands lsp
+  :custom
+  ;; what to use when checking on-save. "check" is default, I prefer clippy
+  (lsp-rust-analyzer-cargo-watch-command "clippy")
+  (lsp-eldoc-render-all t)
+  (lsp-idle-delay 0.6)
+  ;; enable / disable the hints as you prefer:
+  (lsp-rust-analyzer-server-display-inlay-hints t)
+  (lsp-rust-analyzer-display-lifetime-elision-hints-enable "skip_trivial")
+  (lsp-rust-analyzer-display-chaining-hints t)
+  (lsp-rust-analyzer-display-lifetime-elision-hints-use-parameter-names nil)
+  (lsp-rust-analyzer-display-closure-return-type-hints t)
+  (lsp-rust-analyzer-display-parameter-hints nil)
+  (lsp-rust-analyzer-display-reborrow-hints nil)
+  :config
+  (add-hook 'lsp-mode-hook 'lsp-ui-mode))
+
+(use-package lsp-ui
+  :ensure
+  :commands lsp-ui-mode
+  :custom
+  (lsp-ui-peek-always-show t)
+  (lsp-ui-sideline-show-hover t)
+  (lsp-ui-doc-enable nil))
+#+end_src
+
+The actual completion user interface is provided by the company package.
+
+#+begin_src emacs-lisp
+;; Company
+(use-package company
+  :ensure
+  :custom
+  (company-idle-delay 0.5) ;; how long to wait until popup
+  ;; (company-begin-commands nil) ;; uncomment to disable popup
+  :bind
+  (:map company-active-map
+	      ("C-n". company-select-next)
+	      ("C-p". company-select-previous)
+	      ("M-<". company-select-first)
+	      ("M->". company-select-last)
+  (:map company-mode-map
+              ("<tab>". tab-indent-or-complete)
+	      ("TAB". tab-indent-or-complete))))
+#+end_src
+
+Snippets can also be quite comfortable, as such we use the yasnippet package.
+
+#+begin_src emacs-lisp
+(use-package yasnippet
+  :ensure
+  :config
+  (yas-reload-all)
+  (add-hook 'prog-mode-hook 'yas-minor-mode)
+  (add-hook 'text-mode-hook 'yas-minor-mode))
+
+(defun company-yasnippet-or-completion ()
+  (interactive)
+  (or (do-yas-expand)
+      (company-complete-common)))
+
+(defun check-expansion ()
+  (save-excursion
+    (if (looking-at "\\_>") t
+      (backward-char 1)
+      (if (looking-at "\\.") t
+        (backward-char 1)
+        (if (looking-at "::") t nil)))))
+
+(defun do-yas-expand ()
+  (let ((yas/fallback-behavior 'return-nil))
+    (yas/expand)))
+
+(defun tab-indent-or-complete ()
+  (interactive)
+  (if (minibufferp)
+      (minibuffer-complete)
+    (if (or (not yas/minor-mode)
+            (null (do-yas-expand)))
+        (if (check-expansion)
+            (company-complete-common)
+          (indent-for-tab-command)))))
+#+end_src
+
+Linting functionality is provided by flycheck.
+
+#+begin_src emacs-lisp
+(use-package flycheck :ensure)
+#+end_src
+
+** GNU Guile
+Currently working through the SICP book, I am trying my best to learn the Scheme family of LISPs. Most functionality I need is provided by GNU Guile, with Geiser providing the necessary tooling to execute Scheme snippets from within org-files using Org-Babel.
+
+#+begin_src emacs-lisp
+;; Scheme
+(use-package geiser-guile :ensure t)
+#+end_src
+
+*** Parinfer
+LISP and parenthesis are a... wild topic.
+Parinfer makes things easier for us in that regard.
+
+#+begin_src emacs-lisp
+;; Parinfer
+(use-package parinfer-rust-mode
+  :hook (emacs-lisp-mode scheme-mode)
+  :init
+  (setq parinfer-rust-auto-download t))
+#+end_src
+
+** Rust
+I enjoy using the Rust language a lot, and the rustic package allows for using it comfortably within emacs.
+
+#+begin_src emacs-lisp
+;; Rustic
+(use-package rustic
+  :ensure
+  :bind (:map rustic-mode-map
+              ("M-j" . lsp-ui-imenu)
+              ("M-?" . lsp-find-references)
+              ("C-c C-c l" . flycheck-list-errors)
+              ("C-c C-c a" . lsp-execute-code-action)
+              ("C-c C-c r" . lsp-rename)
+              ("C-c C-c q" . lsp-workspace-restart)
+              ("C-c C-c Q" . lsp-workspace-shutdown)
+              ("C-c C-c s" . lsp-rust-analyzer-status))
+  :config
+  ;; uncomment for less flashiness
+  ;; (setq lsp-eldoc-hook nil)
+  ;; (setq lsp-enable-symbol-highlighting nil)
+  ;; (setq lsp-signature-auto-activate nil)
+
+  ;; comment to disable rustfmt on save
+  (setq rustic-format-on-save t))
+#+end_src
+
+We also want to have inline hints displayed for our code.
+
+#+begin_src emacs-lisp
+(setq lsp-rust-analyzer-server-display-inlay-hints t)
+#+end_src
+
+*** TODO Debugging
+
+** $\LaTeX$
+Working with LaTeX in orgmode is a charm due to it's preview features. This does sometimes have it's issues in terms of scale on my screen, therefore needing to be increased.
+
+#+begin_src emacs-lisp
+;; Org Latex Preview Scale
+(setq org-format-latex-options (plist-put org-format-latex-options :scale 2.0))
+#+end_src
