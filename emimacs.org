@@ -1,5 +1,5 @@
 #+title: Main Emimacs Configuration File
-#+PROPERTY: header-args:emacs-lisp :tangle ./init_test.el :mkdirp yes
+#+PROPERTY: header-args:emacs-lisp :tangle ./emimacs.el :mkdirp yes
 
 * Emimacs
 ** What is this?
@@ -392,13 +392,6 @@ To make editing orgfiles more akin to a text processor, visual fill adds padding
   :hook (org-mode . emimacs/org-mode-visual-fill))
 #+end_src
 
-On my system, some issues with text indentation occur, probably due to the font used. This is easily fixed.
-
-#+begin_src emacs-lisp
-;; Fixing Org mode indentations
-(set-face-attribute 'org-hide nil :inherit 'fixed-pitch)
-#+end_src
-
 ** Babel
 Babel is an incredibly powerful package, allowing for code blocks to be evaluated and tangled from within org files, thus also powering this very configuration file.
 
@@ -417,13 +410,14 @@ Babel is an incredibly powerful package, allowing for code blocks to be evaluate
 Always typing out the syntax of code blocks by hand is fairly tiresome, tempo alleviating this by allowing for quick macros which extend to the wanted code block.
 
 #+begin_src emacs-lisp
-;; Structure Templates
-(require 'org-tempo)
+  ;; Structure Templates
+  (require 'org-tempo)
 
-(add-to-list 'org-structure-template-alist '("sh" . "src shell"))
-(add-to-list 'org-structure-template-alist '("py" . "src python"))
-(add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
-(add-to-list 'org-structure-template-alist '("sc" . "src scheme"))
+  (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
+  (add-to-list 'org-structure-template-alist '("py" . "src python"))
+  (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
+  (add-to-list 'org-structure-template-alist '("sc" . "src scheme"))
+  (add-to-list 'org-structure-template-alist '("rs" . "src rust"))
 #+end_src
 
 We also set up this very file here to automatically be tangled, to make it easily usable as emacs core configuration file.
@@ -437,6 +431,15 @@ We also set up this very file here to automatically be tangled, to make it easil
         (org-babel-tangle))))
 
   (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'emimacs/org-babel-auto-tangle)))
+#+end_src
+
+** Other Adjustments
+
+On my system, some issues with text indentation occur, probably due to the font used. This is easily fixed.
+
+#+begin_src emacs-lisp
+;; Fixing Org mode indentations
+(set-face-attribute 'org-hide nil :inherit 'fixed-pitch)
 #+end_src
 
 * Language Specific

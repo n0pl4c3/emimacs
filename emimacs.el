@@ -1,11 +1,9 @@
-;; Variables
 ;; Fonts
 (defvar emimacs/default-fixed-font-size 150)
 (defvar emimacs/default-variable-font-size 165)
 (defvar emimacs/default-fixed-font "FiraCode Nerd Font")
 (defvar emimacs/default-variable-font "ETBembo")
 
-;;
 ;; Disable Startup Message
 (setq inhibit-startup-message t)
 
@@ -19,11 +17,11 @@
 ;; Enable Line Numbers
 (global-display-line-numbers-mode 1)
 
-(dolist (mode '(org-mode-hook
-                term-mode-hook
-                shell-mode-hook
-                eshell-mode-hook))
-  (add-hook mode (lambda () (display-line-numbers-mode 0))))
+ (dolist (mode '(org-mode-hook
+                   term-mode-hook
+                   shell-mode-hook
+                   eshell-mode-hook))
+     (add-hook mode (lambda () (display-line-numbers-mode 0))))
 
 (defun emimacs/configure-font-faces ()
  ;; Set Font
@@ -42,18 +40,19 @@
                   (emimacs/configure-font-faces))))
   (emimacs/configure-font-faces))
 
+;; make customize use it's own file
+(setq custom-file "~/.emacs.d/custom.el")
+(load custom-file)
+
 ;; Package Sources
-(require 'package)
-(setq package-archives '(("melpa" . "https://melpa.org/packages/")
-                         ("org" . "https://orgmode.org/elpa/")
-                         ("elpa" . "https://elpa.gnu.org/packages/")))
+  (require 'package)
+  (setq package-archives '(("melpa" . "https://melpa.org/packages/")
+                           ("org" . "https://orgmode.org/elpa/")
+                           ("elpa" . "https://elpa.gnu.org/packages/")))
 
 (package-initialize)
 (unless package-archive-contents
   (package-refresh-contents))
-
-(unless (package-installed-p 'use-package)
-  (package-install 'use-package))
 
 (require 'use-package)
 (setq use-package-always-ensure t)
@@ -63,10 +62,6 @@
   (package-install 'diminish))
 
 (require 'diminish)
-
-;; make customize use it's own file
-(setq custom-file "~/.emacs.d/custom.el")
-(load custom-file)
 
 ;; Ivy (completions)
 (use-package ivy
@@ -87,12 +82,6 @@
   :init
   (ivy-mode 1))
 
-;; Icons for Doom Modeline
-;; First time usage: Install fonts
-(use-package all-the-icons
-  :ensure t)
-
-;; Counsel (Ivy for builtin commands)
 (use-package counsel
   :bind (("M-x" . counsel-M-x)
          ("C-x b" . counsel-ibuffer)
@@ -103,7 +92,15 @@
   :config
   (setq ivy-initial-inputs-alist nil))
 
-;; Doom Modeline for now
+(use-package ivy-rich
+  :init
+  (ivy-rich-mode 1))
+
+;; Icons for Doom Modeline
+;; First time usage: Install fonts
+(use-package all-the-icons
+  :ensure t)
+
 (use-package doom-modeline
   :ensure t
   :custom
@@ -111,20 +108,14 @@
   (column-number-mode t)
   :init (doom-modeline-mode 1))
 
-;; Raindow Delimiters for LISP
 (use-package rainbow-delimiters
   :hook (prog-mode . rainbow-delimiters-mode))
 
-;; For learning
 (use-package which-key
   :init (which-key-mode)
   :diminish which-key-mode
   :config
   (setq which-key-idle-delay 0.5))
-
-(use-package ivy-rich
-  :init
-  (ivy-rich-mode 1))
 
 (use-package helpful
   :custom
@@ -136,15 +127,13 @@
   ([remap describe-variable] . counsel-describe-variable)
   ([remap describe-key] . helpful-key))
 
-;; Doom Themes for the time being
-;; TODO  Replace with selfmade one later
 (use-package doom-themes)
 
 ;; Set Theme 
 (load-theme 'doom-fairy-floss)
 
-;; For keybinding definitions
 (use-package general)
+
 (use-package hydra)
 
 ;; Projectile
@@ -168,8 +157,6 @@
 
 ;; TODO initial setup
 (use-package forge)
-
-;; Orgmode
 
 (font-lock-add-keywords 'org-mode
                         '(("^ *\\([-]\\) "
@@ -214,9 +201,9 @@
   (org-ellipsis " ")
   (org-log-done 'time)
   (org-log-into-drawer t)
-  (org-agenda-files '("~/Orgfiles" "~/Orgfiles/Projects" "~/Orgfiles/Literature"))
+  (org-agenda-files '("~/Orgfiles" "~/Orgfiles/Projects" "~/Orgfiles/Literature" "~/Orgfiles/University"))
   (org-todo-keywords
-    '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d!)")))) 
+    '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d!)"))))
 
 (use-package org-bullets
  :after org
@@ -231,9 +218,6 @@
 
 (use-package visual-fill-column
   :hook (org-mode . emimacs/org-mode-visual-fill))
-
-;; Scheme
-(use-package geiser-guile :ensure t)
 
 ;; org-babel
 (org-babel-do-load-languages
@@ -251,6 +235,7 @@
 (add-to-list 'org-structure-template-alist '("py" . "src python"))
 (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
 (add-to-list 'org-structure-template-alist '("sc" . "src scheme"))
+(add-to-list 'org-structure-template-alist '("rs" . "src rust"))
 
 ;; Auto-Tangle Config File
 (defun emimacs/org-babel-auto-tangle ()
@@ -258,32 +243,13 @@
                       (expand-file-name "~/Repositories/emimacs/emimacs.org"))
     (let ((org-confirm-babel-evaluate nil))
       (org-babel-tangle))))
-  
+
 (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'emimacs/org-babel-auto-tangle)))
 
-;; Rustic
-(use-package rustic
-  :ensure
-  :bind (:map rustic-mode-map
-              ("M-j" . lsp-ui-imenu)
-              ("M-?" . lsp-find-references)
-              ("C-c C-c l" . flycheck-list-errors)
-              ("C-c C-c a" . lsp-execute-code-action)
-              ("C-c C-c r" . lsp-rename)
-              ("C-c C-c q" . lsp-workspace-restart)
-              ("C-c C-c Q" . lsp-workspace-shutdown)
-              ("C-c C-c s" . lsp-rust-analyzer-status))
-  :config
-  ;; uncomment for less flashiness
-  ;; (setq lsp-eldoc-hook nil)
-  ;; (setq lsp-enable-symbol-highlighting nil)
-  ;; (setq lsp-signature-auto-activate nil)
-
-  ;; comment to disable rustfmt on save
-  (setq rustic-format-on-save t))
+;; Fixing Org mode indentations
+(set-face-attribute 'org-hide nil :inherit 'fixed-pitch)
 
 ;; LSP
-
 (use-package lsp-mode
   :ensure
   :commands lsp
@@ -312,7 +278,6 @@
   (lsp-ui-doc-enable nil))
 
 ;; Company
-
 (use-package company
   :ensure
   :custom
@@ -326,7 +291,7 @@
 	      ("M->". company-select-last)
   (:map company-mode-map
               ("<tab>". tab-indent-or-complete)
-	      ("TAB". tab-indent-or-complete)))
+	      ("TAB". tab-indent-or-complete))))
 
 (use-package yasnippet
   :ensure
@@ -364,19 +329,37 @@
 
 (use-package flycheck :ensure)
 
-(setq lsp-rust-analyzer-server-display-inlay-hints t)
-
-;; TODO Debugging
+;; Scheme
+(use-package geiser-guile :ensure t)
 
 ;; Parinfer
 (use-package parinfer-rust-mode
   :hook (emacs-lisp-mode scheme-mode)
   :init
   (setq parinfer-rust-auto-download t))
-    
+
+;; Rustic
+(use-package rustic
+  :ensure
+  :bind (:map rustic-mode-map
+              ("M-j" . lsp-ui-imenu)
+              ("M-?" . lsp-find-references)
+              ("C-c C-c l" . flycheck-list-errors)
+              ("C-c C-c a" . lsp-execute-code-action)
+              ("C-c C-c r" . lsp-rename)
+              ("C-c C-c q" . lsp-workspace-restart)
+              ("C-c C-c Q" . lsp-workspace-shutdown)
+              ("C-c C-c s" . lsp-rust-analyzer-status))
+  :config
+  ;; uncomment for less flashiness
+  ;; (setq lsp-eldoc-hook nil)
+  ;; (setq lsp-enable-symbol-highlighting nil)
+  ;; (setq lsp-signature-auto-activate nil)
+
+  ;; comment to disable rustfmt on save
+  (setq rustic-format-on-save t))
+
+(setq lsp-rust-analyzer-server-display-inlay-hints t)
+
 ;; Org Latex Preview Scale
 (setq org-format-latex-options (plist-put org-format-latex-options :scale 2.0))
-
-;; Fixing Org mode indentations
-(set-face-attribute 'org-hide nil :inherit 'fixed-pitch)
-
