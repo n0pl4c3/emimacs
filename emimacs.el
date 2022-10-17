@@ -364,3 +364,13 @@
 
 ;; Org Latex Preview Scale
 (setq org-format-latex-options (plist-put org-format-latex-options :scale 2.0))
+
+(use-package elpy
+  :ensure t
+  :init
+  (elpy-enable)
+  :config
+  (setq elpy-modules (delq 'elpy-module-flymake elpy-modules))
+  (add-hook 'elpy-mode-hook 'flycheck-mode))
+
+(use-package blacken)

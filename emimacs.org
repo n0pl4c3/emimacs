@@ -603,3 +603,22 @@ Working with LaTeX in orgmode is a charm due to it's preview features. This does
 ;; Org Latex Preview Scale
 (setq org-format-latex-options (plist-put org-format-latex-options :scale 2.0))
 #+end_src
+
+** Python
+Elpy provides pretty much all python functionality needed.
+
+#+begin_src emacs-lisp
+    (use-package elpy
+      :ensure t
+      :init
+      (elpy-enable)
+      :config
+      (setq elpy-modules (delq 'elpy-module-flymake elpy-modules))
+      (add-hook 'elpy-mode-hook 'flycheck-mode))
+#+end_src
+
+PEP-8 isn't fun to ensure by hand, blacken does that for us.
+
+#+begin_src emacs-lisp
+(use-package blacken)
+#+end_src
