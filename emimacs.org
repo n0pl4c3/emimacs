@@ -480,21 +480,22 @@ Generally, we will want to have the lsp package, as while most things made by Mi
 The actual completion user interface is provided by the company package.
 
 #+begin_src emacs-lisp
-;; Company
-(use-package company
-  :ensure
-  :custom
-  (company-idle-delay 0.5) ;; how long to wait until popup
-  ;; (company-begin-commands nil) ;; uncomment to disable popup
-  :bind
-  (:map company-active-map
-	      ("C-n". company-select-next)
-	      ("C-p". company-select-previous)
-	      ("M-<". company-select-first)
-	      ("M->". company-select-last)
-  (:map company-mode-map
-              ("<tab>". tab-indent-or-complete)
-	      ("TAB". tab-indent-or-complete))))
+    ;; Company
+    (use-package company
+      :ensure
+      :custom
+      (company-idle-delay 0.5) ;; how long to wait until popup
+      ;; (company-begin-commands nil) ;; uncomment to disable popup
+      :bind
+      (:map company-active-map
+                  ("C-n". company-select-next)
+                  ("C-p". company-select-previous)
+                  ("M-<". company-select-first)
+                  ("M->". company-select-last) 
+       (:map company-mode-map
+                   ("<tab>". tab-indent-or-complete)
+                   ("TAB". tab-indent-or-complete)
+                   ("M-.".'company-complete))))
 #+end_src
 
 Snippets can also be quite comfortable, as such we use the yasnippet package.
