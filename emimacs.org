@@ -245,7 +245,7 @@ The long term goal certainly is to make this config build on a custom made Emili
 (use-package doom-themes)
 
 ;; Set Theme 
-(load-theme 'doom-fairy-floss)
+(load-theme 'doom-tokyo-night)
 #+end_src
 
 *** General
@@ -448,54 +448,61 @@ Here configurations for working with different programming languages is placed
 Generally, we will want to have the lsp package, as while most things made by Microsoft suck bad, this protocol makes auto-completion quite a charm in many editors including emacs.
 
 #+begin_src emacs-lisp
-;; LSP
-(use-package lsp-mode
-  :ensure
-  :commands lsp
-  :custom
-  ;; what to use when checking on-save. "check" is default, I prefer clippy
-  (lsp-rust-analyzer-cargo-watch-command "clippy")
-  (lsp-eldoc-render-all t)
-  (lsp-idle-delay 0.6)
-  ;; enable / disable the hints as you prefer:
-  (lsp-rust-analyzer-server-display-inlay-hints t)
-  (lsp-rust-analyzer-display-lifetime-elision-hints-enable "skip_trivial")
-  (lsp-rust-analyzer-display-chaining-hints t)
-  (lsp-rust-analyzer-display-lifetime-elision-hints-use-parameter-names nil)
-  (lsp-rust-analyzer-display-closure-return-type-hints t)
-  (lsp-rust-analyzer-display-parameter-hints nil)
-  (lsp-rust-analyzer-display-reborrow-hints nil)
-  :config
-  (add-hook 'lsp-mode-hook 'lsp-ui-mode))
+    ;; LSP
+    (use-package lsp-mode
+      :ensure
+      :commands lsp
+      :hook  (scala-mode . lsp)
+           (lsp-mode . lsp-lens-mode)
+      :custom
+      ;; what to use when checking on-save. "check" is default, I prefer clippy
+      (lsp-rust-analyzer-cargo-watch-command "clippy")
+      (lsp-eldoc-render-all t)
+      (lsp-idle-delay 0.6)
+      ;; enable / disable the hints as you prefer:
+      (lsp-rust-analyzer-server-display-inlay-hints t)
+      (lsp-rust-analyzer-display-lifetime-elision-hints-enable "skip_trivial")
+      (lsp-rust-analyzer-display-chaining-hints t)
+      (lsp-rust-analyzer-display-lifetime-elision-hints-use-parameter-names nil)
+      (lsp-rust-analyzer-display-closure-return-type-hints t)
+      (lsp-rust-analyzer-display-parameter-hints nil)
+      (lsp-rust-analyzer-display-reborrow-hints nil)
+      :config
+      (add-hook 'lsp-mode-hook 'lsp-ui-mode)
+      ;; Add metals backend for lsp-mode
+      (use-package lsp-metals))
 
-(use-package lsp-ui
-  :ensure
-  :commands lsp-ui-mode
-  :custom
-  (lsp-ui-peek-always-show t)
-  (lsp-ui-sideline-show-hover t)
-  (lsp-ui-doc-enable nil))
+    (use-package lsp-ui
+      :ensure
+      :commands lsp-ui-mode
+      :custom
+      (lsp-ui-peek-always-show t)
+      (lsp-ui-sideline-show-hover t)
+      (lsp-ui-doc-enable nil))
 #+end_src
 
 The actual completion user interface is provided by the company package.
 
 #+begin_src emacs-lisp
-    ;; Company
-    (use-package company
-      :ensure
-      :custom
-      (company-idle-delay 0.5) ;; how long to wait until popup
-      ;; (company-begin-commands nil) ;; uncomment to disable popup
-      :bind
-      (:map company-active-map
-                  ("C-n". company-select-next)
-                  ("C-p". company-select-previous)
-                  ("M-<". company-select-first)
-                  ("M->". company-select-last) 
-       (:map company-mode-map
-                   ("<tab>". tab-indent-or-complete)
-                   ("TAB". tab-indent-or-complete)
-                   ("M-.".'company-complete))))
+  ;; Company
+  (use-package company
+    :hook (scala-mode . company-mode)
+    :ensure
+    :config
+    (setq lsp-completion-provider :capf)
+    :custom
+    (company-idle-delay 0.5) ;; how long to wait until popup
+    ;; (company-begin-commands nil) ;; uncomment to disable popup
+    :bind
+    (:map company-active-map
+                ("C-n". company-select-next)
+                ("C-p". company-select-previous)
+                ("M-<". company-select-first)
+                ("M->". company-select-last) 
+     (:map company-mode-map
+                 ("<tab>". tab-indent-or-complete)
+                 ("TAB". tab-indent-or-complete)
+                 ("M-.".'company-complete))))
 #+end_src
 
 Snippets can also be quite comfortable, as such we use the yasnippet package.
@@ -539,7 +546,8 @@ Snippets can also be quite comfortable, as such we use the yasnippet package.
 Linting functionality is provided by flycheck.
 
 #+begin_src emacs-lisp
-(use-package flycheck :ensure)
+  (use-package flycheck :ensure
+  :init (global-flycheck-mode))
 #+end_src
 
 ** GNU Guile
@@ -621,4 +629,41 @@ PEP-8 isn't fun to ensure by hand, blacken does that for us.
 
 #+begin_src emacs-lisp
 (use-package blacken)
+#+end_src
+
+** Haskell
+#+begin_src emacs-lisp
+(use-package haskell-mode)
+#+end_src
+
+** Scala
+
+#+begin_src emacs-lisp
+  ;; Enable scala-mode for highlighting, indentation and motion commands
+  (use-package scala-mode
+     :interpreter ("scala" . scala-mode))
+
+  ;; Enable sbt mode for executing sbt commands
+  (use-package sbt-mode
+     :commands sbt-start sbt-command
+     :config
+     ;; WORKAROUND: https://github.com/ensime/emacs-sbt-mode/issues/31
+     ;; allows using SPACE when in the minibuffer
+     (substitute-key-definition
+       'minibuffer-complete-word
+       'self-insert-command
+       minibuffer-local-completion-map)
+      ;; sbt-supershell kills sbt-mode:  https://github.com/hvesalai/emacs-sbt-mode/issues/152
+      (setq sbt:program-options '("-Dsbt.supershell=false")))
+
+
+  ;; Posframe is a pop-up tool that must be manually installed for dap-mode
+  (use-package posframe)
+
+  ;; Use the Debug Adapter Protocol for running tests and debugging
+  (use-package dap-mode
+    :hook
+    (lsp-mode . dap-mode)
+    (lsp-mode . dap-ui-mode))
+
 #+end_src

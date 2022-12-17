@@ -130,7 +130,7 @@
 (use-package doom-themes)
 
 ;; Set Theme 
-(load-theme 'doom-fairy-floss)
+(load-theme 'doom-tokyo-night)
 
 (use-package general)
 
@@ -253,6 +253,8 @@
 (use-package lsp-mode
   :ensure
   :commands lsp
+  :hook  (scala-mode . lsp)
+       (lsp-mode . lsp-lens-mode)
   :custom
   ;; what to use when checking on-save. "check" is default, I prefer clippy
   (lsp-rust-analyzer-cargo-watch-command "clippy")
@@ -267,7 +269,9 @@
   (lsp-rust-analyzer-display-parameter-hints nil)
   (lsp-rust-analyzer-display-reborrow-hints nil)
   :config
-  (add-hook 'lsp-mode-hook 'lsp-ui-mode))
+  (add-hook 'lsp-mode-hook 'lsp-ui-mode)
+  ;; Add metals backend for lsp-mode
+  (use-package lsp-metals))
 
 (use-package lsp-ui
   :ensure
@@ -279,7 +283,10 @@
 
 ;; Company
 (use-package company
+  :hook (scala-mode . company-mode)
   :ensure
+  :config
+  (setq lsp-completion-provider :capf)
   :custom
   (company-idle-delay 0.5) ;; how long to wait until popup
   ;; (company-begin-commands nil) ;; uncomment to disable popup
@@ -328,7 +335,8 @@
             (company-complete-common)
           (indent-for-tab-command)))))
 
-(use-package flycheck :ensure)
+(use-package flycheck :ensure
+:init (global-flycheck-mode))
 
 ;; Scheme
 (use-package geiser-guile :ensure t)
@@ -374,3 +382,32 @@
   (add-hook 'elpy-mode-hook 'flycheck-mode))
 
 (use-package blacken)
+
+(use-package haskell-mode)
+
+;; Enable scala-mode for highlighting, indentation and motion commands
+(use-package scala-mode
+   :interpreter ("scala" . scala-mode))
+
+;; Enable sbt mode for executing sbt commands
+(use-package sbt-mode
+   :commands sbt-start sbt-command
+   :config
+   ;; WORKAROUND: https://github.com/ensime/emacs-sbt-mode/issues/31
+   ;; allows using SPACE when in the minibuffer
+   (substitute-key-definition
+     'minibuffer-complete-word
+     'self-insert-command
+     minibuffer-local-completion-map)
+    ;; sbt-supershell kills sbt-mode:  https://github.com/hvesalai/emacs-sbt-mode/issues/152
+    (setq sbt:program-options '("-Dsbt.supershell=false")))
+
+
+;; Posframe is a pop-up tool that must be manually installed for dap-mode
+(use-package posframe)
+
+;; Use the Debug Adapter Protocol for running tests and debugging
+(use-package dap-mode
+  :hook
+  (lsp-mode . dap-mode)
+  (lsp-mode . dap-ui-mode))
