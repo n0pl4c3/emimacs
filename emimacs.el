@@ -14,6 +14,11 @@
 (set-fringe-mode 10)
 (menu-bar-mode -1)
 
+(setq-default 
+ tab-width 2
+ standard-indent 2
+ indent-tabs-mode nil)
+
 ;; Enable Line Numbers
 (global-display-line-numbers-mode 1)
 
@@ -254,7 +259,8 @@
   :ensure
   :commands lsp
   :hook  (scala-mode . lsp)
-       (lsp-mode . lsp-lens-mode)
+         (lsp-mode . lsp-lens-mode)
+         (php-mode . lsp)
   :custom
   ;; what to use when checking on-save. "check" is default, I prefer clippy
   (lsp-rust-analyzer-cargo-watch-command "clippy")
@@ -284,9 +290,13 @@
 ;; Company
 (use-package company
   :hook (scala-mode . company-mode)
+  :hook (ruby-mode . company-mode)
+  :hook (nimsuggest-mode . company-mode)
   :ensure
   :config
   (setq lsp-completion-provider :capf)
+  (push 'company-robe company-backends)
+  (push 'company-nimsuggest company-backends)
   :custom
   (company-idle-delay 0.5) ;; how long to wait until popup
   ;; (company-begin-commands nil) ;; uncomment to disable popup
@@ -411,3 +421,84 @@
   :hook
   (lsp-mode . dap-mode)
   (lsp-mode . dap-ui-mode))
+
+(use-package go-mode
+  :ensure t
+  :init
+  (setq tab-width 2 indent-tabs-mode nil) 
+  :bind ()
+         ;; If you want to switch existing go-mode bindings to use lsp-mode/gopls instead
+         ;; uncomment the following lines
+         ;; ("C-c C-j" . lsp-find-definition)
+         ;; ("C-c C-d" . lsp-describe-thing-at-point)
+
+  :hook ((go-mode . lsp-deferred)
+         (before-save . lsp-format-buffer)
+         (before-save . lsp-organize-imports)))
+
+(provide 'gopls-config)
+
+(use-package clojure-mode)
+(use-package cider)
+
+(use-package ruby-mode
+  :ensure t
+  :mode "\\.rb\\'"
+  :mode "Rakefile\\'"
+  :mode "Gemfile\\'"
+  :mode "Berksfile\\'"
+  :mode "Vagrantfile\\'"
+  :interpreter "ruby"
+
+  :init
+  (setq ruby-indent-level 2
+        ruby-indent-tabs-mode nil)
+  (add-hook 'ruby-mode 'superword-mode)
+
+  :bind
+  (([(meta down)] . ruby-forward-sexp)
+   ([(meta up)]   . ruby-backward-sexp)
+   (("C-c C-e"    . ruby-send-region))))
+
+(use-package rvm
+  :ensure t
+  :config
+  (rvm-use-default))
+
+(use-package inf-ruby
+  :ensure t
+  :init
+  (add-hook 'ruby-mode-hook 'inf-ruby-minor-mode))
+
+(use-package rubocop
+  :ensure t
+  :init
+  (add-hook 'ruby-mode-hook 'rubocop-mode)
+  :diminish rubocop-mode)
+
+(use-package ruby-end)
+
+(use-package robe
+ :ensure t
+ :bind (
+        :map robe-mode-map
+             ("C-M-." . robe-jump))
+ :init
+ (add-hook 'ruby-mode-hook 'robe-mode)
+
+ :config
+ (defadvice inf-ruby-console-auto
+   (before activate-rvm-for-robe activate)
+   (rvm-activate-corresponding-ruby))
+  (unbind-key "M-." robe-mode-map))
+
+(use-package nim-mode
+     :hook (nim-mode . nimsuggest-mode))
+
+(use-package php-mode :ensure t)
+
+(use-package dart-mode
+  :config
+  (add-hook 'dart-mode-hook 'lsp))
+
+(use-package lua-mode)
