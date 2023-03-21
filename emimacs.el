@@ -246,6 +246,11 @@
 
 (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'emimacs/org-babel-auto-tangle)))
 
+(use-package dashboard
+  :ensure t
+  :config
+  (dashboard-setup-startup-hook))
+
 ;; Fixing Org mode indentations
 (set-face-attribute 'org-hide nil :inherit 'fixed-pitch)
 
@@ -254,7 +259,9 @@
   :ensure
   :commands lsp
   :hook  (scala-mode . lsp)
-       (lsp-mode . lsp-lens-mode)
+         (c-mode . lsp)
+         (c++-mode . lsp)
+         (lsp-mode . lsp-lens-mode)
   :custom
   ;; what to use when checking on-save. "check" is default, I prefer clippy
   (lsp-rust-analyzer-cargo-watch-command "clippy")
@@ -280,6 +287,12 @@
   (lsp-ui-peek-always-show t)
   (lsp-ui-sideline-show-hover t)
   (lsp-ui-doc-enable nil))
+
+;; Use the Debug Adapter Protocol for running tests and debugging
+(use-package dap-mode
+  :hook
+  (lsp-mode . dap-mode)
+  (lsp-mode . dap-ui-mode))
 
 ;; Company
 (use-package company
@@ -406,8 +419,4 @@
 ;; Posframe is a pop-up tool that must be manually installed for dap-mode
 (use-package posframe)
 
-;; Use the Debug Adapter Protocol for running tests and debugging
-(use-package dap-mode
-  :hook
-  (lsp-mode . dap-mode)
-  (lsp-mode . dap-ui-mode))
+(setq-default c-basic-offset 2)
